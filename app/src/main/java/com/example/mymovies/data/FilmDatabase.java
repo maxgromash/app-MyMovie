@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase;
 @Database(entities =  {Film.class, FavouriteFilms.class}, version = 1, exportSchema = false)
 public abstract class FilmDatabase extends RoomDatabase {
     private static  FilmDatabase database;
-    private static final String DATABASE_NAME = "gfd.db";
+    private static final String DATABASE_NAME = "mymovie.db";
     private static final Object LOCK = new Object();
 
     public static FilmDatabase getInstance(Context context) {
@@ -20,5 +20,6 @@ public abstract class FilmDatabase extends RoomDatabase {
         return database;
     }
 
+    //Доступ к операциям с базой
     public abstract FilmDao filmDao();
 }

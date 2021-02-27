@@ -1,6 +1,5 @@
 package com.example.mymovies.adapters;
 
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,6 +54,7 @@ public class FilmAdapter extends RecyclerView.Adapter<FilmAdapter.FilmViewHolder
         void onReachEnd();
     }
 
+    //Создаём
     @NonNull
     @Override
     public FilmViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -62,9 +62,10 @@ public class FilmAdapter extends RecyclerView.Adapter<FilmAdapter.FilmViewHolder
         return new FilmViewHolder(view);
     }
 
+    //Заполняем
     @Override
     public void onBindViewHolder(@NonNull FilmViewHolder holder, int position) {
-        if (films.size()>=20 && position == films.size() - 3 && onReachEndListener != null) {
+        if (films.size()>=20 && position == films.size() -5 && onReachEndListener != null) {
             onReachEndListener.onReachEnd();
         }
         Film film = films.get(position);
@@ -79,9 +80,10 @@ public class FilmAdapter extends RecyclerView.Adapter<FilmAdapter.FilmViewHolder
 
     /**
      * Холдер для адаптера
+     * Предоставляет доступ ко всем View-компонентам в кажддой строке списка
      */
     class FilmViewHolder extends RecyclerView.ViewHolder {
-        private ImageView imageViewSmallPoster;
+        private final ImageView imageViewSmallPoster;
 
         public FilmViewHolder(@NonNull View itemView) {
             super(itemView);

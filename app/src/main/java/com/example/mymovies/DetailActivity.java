@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -52,8 +51,6 @@ public class DetailActivity extends AppCompatActivity {
     private ReviewAdapter reviewAdapter;
     private TrailerAdapter trailerAdapter;
 
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -66,8 +63,7 @@ public class DetailActivity extends AppCompatActivity {
         int id = item.getItemId();
         switch (id){
             case R.id.itemMain:
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
+                finish();
                 break;
             case R.id.itemFavourite:
                 Intent intentToFavourite = new Intent(this, FavouriteActivity.class);
@@ -89,6 +85,9 @@ public class DetailActivity extends AppCompatActivity {
         textViewDate = findViewById(R.id.textViewReleaseDate);
         textViewTitle = findViewById(R.id.textViewTitle);
         imageViewPoster = findViewById(R.id.imageViewBigPoster);
+        recyclerViewTrailers = findViewById(R.id.recyclerViewTrailers);
+        recyclerViewReviews = findViewById(R.id.recyclerViewReviews);
+
 
         int id = getIntent().getIntExtra("id", 0);
 
@@ -121,22 +120,20 @@ public class DetailActivity extends AppCompatActivity {
             Picasso.get().load(R.drawable.star).into(star);
         }
 
-        recyclerViewTrailers = findViewById(R.id.recyclerViewTrailers);
-        recyclerViewReviews = findViewById(R.id.recyclerViewReviews);
+
         trailerAdapter = new TrailerAdapter();
-        trailerAdapter.setOnTrailerClickListener(new TrailerAdapter.OntrailerclickListener() {
-            @Override
-            public void onTrailerClick(String url) {
-                Intent intentToTrailer = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                startActivity(intentToTrailer);
-            }
+        trailerAdapter.setOnTrailerClickListener(url -> {
+            Intent intentToTrailer = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intentToTrailer);
         });
+
         reviewAdapter = new ReviewAdapter();
         recyclerViewReviews.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewTrailers.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewReviews.setAdapter(reviewAdapter);
         recyclerViewTrailers.setAdapter(trailerAdapter);
 
+        //TODO: Переместить вызовы в ViewModel
         JSONObject jsonObjectTrailers = NetworkUtils.getJSONForVideos(film.getId());
         JSONObject jsonObjectReviews = NetworkUtils.getJSONForReviews(film.getId());
         ArrayList<Trailer> trailers = JSONUtils.getTrailerFromJSON(jsonObjectTrailers);

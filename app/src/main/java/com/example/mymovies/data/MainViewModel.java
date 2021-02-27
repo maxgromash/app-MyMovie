@@ -2,11 +2,16 @@ package com.example.mymovies.data;
 
 import android.app.Application;
 import android.os.AsyncTask;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
+import com.example.mymovies.utils.JSONUtils;
+import com.example.mymovies.utils.NetworkUtils;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -21,6 +26,20 @@ public class MainViewModel extends AndroidViewModel {
         database = FilmDatabase.getInstance(getApplication());
         films = database.filmDao().getAllFilms();
         favouriteFilms = database.filmDao().getAllFavouriteFilms();
+    }
+
+
+    public void downloadData(int methodOfSort, int page) {
+
+        ArrayList<Film> films = JSONUtils.getMoviesFromJSON(NetworkUtils.getJSONFromNetwork(methodOfSort, page));
+        if (films != null && !films.isEmpty()) {
+            if (page == 1)
+                deleteAllFilms();
+            for (Film film : films) {
+                insertFilm(film);
+            }
+        }
+
     }
 
     public LiveData<List<Film>> getFilms() {

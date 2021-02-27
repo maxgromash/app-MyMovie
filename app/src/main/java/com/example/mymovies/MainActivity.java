@@ -2,6 +2,7 @@ package com.example.mymovies;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
@@ -34,6 +35,7 @@ import org.json.JSONObject;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,10 +46,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewPopularity;
     private TextView textViewVotes;
     private MainViewModel viewModel;
-
     private ProgressBar progressBar;
+
     private int methodOfSort;
-    private  static int page = 1;
+    private static int page = 1;
     private static boolean isLoading = false;
 
     //Создание меню
@@ -61,15 +63,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        switch (id) {
-            case R.id.itemMain:
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
-                break;
-            case R.id.itemFavourite:
-                Intent intentToFavourite = new Intent(this, FavouriteActivity.class);
-                startActivity(intentToFavourite);
-                break;
+        if (id == R.id.itemFavourite) {
+            Intent intentToFavourite = new Intent(this, FavouriteActivity.class);
+            startActivity(intentToFavourite);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -77,11 +73,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         textViewPopularity = findViewById(R.id.textViewPopularity);
         textViewVotes = findViewById(R.id.textViewTopRated);
         switchSort = findViewById(R.id.switchSort);
         progressBar = findViewById(R.id.progressBarLoading);
+
         //Создаём адаптер для RecyclerView
         adapter = new FilmAdapter();
         recyclerViewFilms = findViewById(R.id.recyclerViewFilms);
@@ -102,54 +100,35 @@ public class MainActivity extends AppCompatActivity {
             }
         }).get(MainViewModel.class);
 
+        //получение фильмов через ViewModel и доавление LiveData к адаптеру
+        LiveData<List<Film>> filmsFromLiveData = viewModel.getFilms();
+        filmsFromLiveData.observe(this, films -> adapter.setFilms(films));
 
         //Настройка слушателя смены сортировки
         switchSort.setChecked(true);
-        switchSort.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                page = 1;
-                setMethodOfSort(b);
-            }
+        switchSort.setOnCheckedChangeListener((compoundButton, b) -> {
+            page = 1;
+            setMethodOfSort(b);
         });
         switchSort.setChecked(false);
 
         //Настройка слушателя нажатия на фильм
-        adapter.setOnPosterClickListener(new FilmAdapter.OnPosterClickListener() {
-            @Override
-            public void onPosterClick(int position) {
-                Film film = viewModel.getFilms().getValue().get(position);
-                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                intent.putExtra("id", film.getId());
-                startActivity(intent);
-            }
+        adapter.setOnPosterClickListener(position -> {
+            Film film = Objects.requireNonNull(viewModel.getFilms().getValue()).get(position);
+            Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+            intent.putExtra("id", film.getId());
+            startActivity(intent);
         });
 
         //Настройка слушателя конца фильмов
-        adapter.setOnReachEndListener(new FilmAdapter.OnReachEndListener() {
-            @Override
-            public void onReachEnd() {
-                if (!isLoading){
-                    downloadData(methodOfSort);
-                    recyclerViewFilms.post(new Runnable()
-                    {
-                        @Override
-                        public void run() {
-                            adapter.notifyDataSetChanged();
-                        }
-                    });
-                }
+        adapter.setOnReachEndListener(() -> {
+            if (!isLoading) {
+                downloadData(methodOfSort);
+                recyclerViewFilms.post(() -> adapter.notifyDataSetChanged());
             }
         });
 
-        //получение фильмов через ViewModel и доавление LiveData к адаптеру
-        LiveData<List<Film>> filmsFromLiveData = viewModel.getFilms();
-        filmsFromLiveData.observe(this, new Observer<List<Film>>() {
-            @Override
-            public void onChanged(List<Film> films) {
-               adapter.setFilms(films);
-            }
-        });
+
     }
 
 
@@ -158,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param view вид
      */
-    public void onCkickSetTopRated(View view) {
+    public void onClickSetTopRated(View view) {
         setMethodOfSort(false);
         switchSort.setChecked(false);
     }
@@ -166,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Обработка смены сортировки на популярность
      *
-     * @param view
+     * @param view Нащ вью
      */
     public void onClickSetTPopularity(View view) {
         setMethodOfSort(true);
@@ -181,28 +160,19 @@ public class MainActivity extends AppCompatActivity {
     private void downloadData(int methodOfSort) {
         isLoading = true;
         progressBar.setVisibility(View.VISIBLE);
-
-        ArrayList<Film> films = JSONUtils.getMoviesFromJSON(NetworkUtils.getJSONFromNetwork(methodOfSort, page));
-        if (films != null && !films.isEmpty()) {
-            if (page == 1)
-                viewModel.deleteAllFilms();
-            for (Film film : films) {
-                viewModel.insertFilm(film);
-            }
-            adapter.addFilms(films);
-            page++;
-        }
+        viewModel.downloadData(methodOfSort, page);
+        page++;
         isLoading = false;
         progressBar.setVisibility(View.INVISIBLE);
     }
 
     /**
-     * Мето дсмены режима сортировки
+     * Метод смены режима сортировки
      *
-     * @param toprated вид сортировки
+     * @param topRated вид сортировки
      */
-    private void setMethodOfSort(boolean toprated) {
-        if (toprated) {
+    private void setMethodOfSort(boolean topRated) {
+        if (topRated) {
             methodOfSort = NetworkUtils.VOTE;
             textViewPopularity.setTextColor(getResources().getColor(R.color.colorAccent));
             textViewVotes.setTextColor(getResources().getColor(R.color.white));

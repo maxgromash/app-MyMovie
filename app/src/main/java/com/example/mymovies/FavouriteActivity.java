@@ -39,15 +39,8 @@ public class FavouriteActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        switch (id){
-            case R.id.itemMain:
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
-                break;
-            case R.id.itemFavourite:
-                Intent intentToFavourite = new Intent(this, FavouriteActivity.class);
-                startActivity(intentToFavourite);
-                break;
+        if (id == R.id.itemMain) {
+            finish();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -75,25 +68,18 @@ public class FavouriteActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
 
-        adapter.setOnPosterClickListener(new FilmAdapter.OnPosterClickListener() {
-            @Override
-            public void onPosterClick(int position) {
-                Film film = adapter.getFilms().get(position);
-                Intent intent = new Intent(FavouriteActivity.this, DetailActivity.class);
-                intent.putExtra("id", film.getId());
-                startActivity(intent);
-            }
+        adapter.setOnPosterClickListener(position -> {
+            Film film = adapter.getFilms().get(position);
+            Intent intent = new Intent(FavouriteActivity.this, DetailActivity.class);
+            intent.putExtra("id", film.getId());
+            startActivity(intent);
         });
 
         LiveData<List<FavouriteFilms>> favouriteFilms = viewModel.getFavouriteFilms();
-        favouriteFilms.observe(this, new Observer<List<FavouriteFilms>>() {
-            @Override
-            public void onChanged(List<FavouriteFilms> favouriteFilms) {
-                List<Film> films = new ArrayList<>();
-                if (favouriteFilms != null) {
-                    films.addAll(favouriteFilms);
-                    adapter.setFilms(films);
-                }
+        favouriteFilms.observe(this, favouriteFilms1 -> {
+            if (favouriteFilms1 != null) {
+                List<Film> films = new ArrayList<>(favouriteFilms1);
+                adapter.setFilms(films);
             }
         });
     }

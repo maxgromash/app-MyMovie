@@ -97,9 +97,6 @@ public class NetworkUtils {
         return result;
     }
 
-
-
-
     /**
      * Публичный метод для получения JSON данных
      *
