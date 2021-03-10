@@ -4,8 +4,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.mymovies.R;
 import com.example.mymovies.data.Review;
 
@@ -36,10 +38,13 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
 
     @Override
     public int getItemCount() {
-        return reviews.size();
+        if (reviews != null)
+            return reviews.size();
+        else
+            return 0;
     }
 
-    class ReviewViewHolder extends RecyclerView.ViewHolder{
+    class ReviewViewHolder extends RecyclerView.ViewHolder {
         private TextView textViewAuthor;
         private TextView textViewContent;
 

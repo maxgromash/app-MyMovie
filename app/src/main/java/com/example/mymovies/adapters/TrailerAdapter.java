@@ -35,6 +35,8 @@ public class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.TrailerV
 
     @Override
     public int getItemCount() {
+        if (trailers == null)
+            return 0;
         return trailers.size();
     }
 
@@ -53,12 +55,9 @@ public class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.TrailerV
         public TrailerViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewNameOfVideo = itemView.findViewById(R.id.textViewNameOfVideo);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (onTrailerClickListener != null)
-                        onTrailerClickListener.onTrailerClick(trailers.get(getAdapterPosition()).getKey());
-                }
+            itemView.setOnClickListener(view -> {
+                if (onTrailerClickListener != null)
+                    onTrailerClickListener.onTrailerClick(trailers.get(getAdapterPosition()).getKey());
             });
 
         }

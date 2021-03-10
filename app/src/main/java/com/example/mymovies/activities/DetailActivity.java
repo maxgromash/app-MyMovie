@@ -1,4 +1,4 @@
-package com.example.mymovies;
+package com.example.mymovies.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mymovies.R;
 import com.example.mymovies.adapters.ReviewAdapter;
 import com.example.mymovies.adapters.TrailerAdapter;
 import com.example.mymovies.data.FavouriteFilms;
@@ -25,11 +26,7 @@ import com.example.mymovies.data.Film;
 import com.example.mymovies.data.MainViewModel;
 import com.example.mymovies.data.Review;
 import com.example.mymovies.data.Trailer;
-import com.example.mymovies.utils.JSONUtils;
-import com.example.mymovies.utils.NetworkUtils;
 import com.squareup.picasso.Picasso;
-
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -63,10 +60,15 @@ public class DetailActivity extends AppCompatActivity {
         int id = item.getItemId();
         switch (id){
             case R.id.itemMain:
-                finish();
+                Intent intentToMain = new Intent(this, MainActivity.class);
+                intentToMain.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intentToMain);
                 break;
             case R.id.itemFavourite:
+                finish();
+
                 Intent intentToFavourite = new Intent(this, FavouriteActivity.class);
+                intentToFavourite.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intentToFavourite);
                 break;
         }
@@ -88,7 +90,6 @@ public class DetailActivity extends AppCompatActivity {
         recyclerViewTrailers = findViewById(R.id.recyclerViewTrailers);
         recyclerViewReviews = findViewById(R.id.recyclerViewReviews);
 
-
         int id = getIntent().getIntExtra("id", 0);
 
         viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
@@ -103,8 +104,15 @@ public class DetailActivity extends AppCompatActivity {
             }
 
         }).get(MainViewModel.class);
-
-        film = viewModel.getFilmById(id);
+        if (getIntent().getIntExtra("flag", 0) == 1)
+            film = viewModel.getFavouriteFilmById(id);
+        else
+            film = viewModel.getFilmById(id);
+        if (film == null)
+        {
+            finish();
+            return;
+        }
         favouriteFilm = new FavouriteFilms(film);
 
         Picasso.get().load(film.getBigPosterPath()).into(imageViewPoster);
@@ -120,7 +128,6 @@ public class DetailActivity extends AppCompatActivity {
             Picasso.get().load(R.drawable.star).into(star);
         }
 
-
         trailerAdapter = new TrailerAdapter();
         trailerAdapter.setOnTrailerClickListener(url -> {
             Intent intentToTrailer = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -133,13 +140,11 @@ public class DetailActivity extends AppCompatActivity {
         recyclerViewReviews.setAdapter(reviewAdapter);
         recyclerViewTrailers.setAdapter(trailerAdapter);
 
-        //TODO: Переместить вызовы в ViewModel
-        JSONObject jsonObjectTrailers = NetworkUtils.getJSONForVideos(film.getId());
-        JSONObject jsonObjectReviews = NetworkUtils.getJSONForReviews(film.getId());
-        ArrayList<Trailer> trailers = JSONUtils.getTrailerFromJSON(jsonObjectTrailers);
-        ArrayList<Review> reviews = JSONUtils.getReviewsFromJSON(jsonObjectReviews);
-        reviewAdapter.setReviews(reviews);
-        trailerAdapter.setTrailers(trailers);
+        viewModel.downloadTrailers(film.getId(), object ->
+                trailerAdapter.setTrailers((ArrayList<Trailer>)object));
+
+        viewModel.downloadReviews(film.getId(), object ->
+                reviewAdapter.setReviews((ArrayList<Review>)object));
 
     }
 

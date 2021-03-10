@@ -1,9 +1,8 @@
-package com.example.mymovies;
+package com.example.mymovies.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -14,7 +13,10 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
+import com.example.mymovies.R;
 import com.example.mymovies.adapters.FilmAdapter;
 import com.example.mymovies.data.FavouriteFilms;
 import com.example.mymovies.data.Film;
@@ -28,6 +30,7 @@ public class FavouriteActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private FilmAdapter adapter;
     private MainViewModel viewModel;
+    private TextView textView;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -46,9 +49,17 @@ public class FavouriteActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favourite);
+
+        textView = findViewById(R.id.textViewNoFavourite);
 
         //Инициализируем viewModel
         viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
@@ -72,6 +83,7 @@ public class FavouriteActivity extends AppCompatActivity {
             Film film = adapter.getFilms().get(position);
             Intent intent = new Intent(FavouriteActivity.this, DetailActivity.class);
             intent.putExtra("id", film.getId());
+            intent.putExtra("flag", 1);
             startActivity(intent);
         });
 
@@ -79,6 +91,10 @@ public class FavouriteActivity extends AppCompatActivity {
         favouriteFilms.observe(this, favouriteFilms1 -> {
             if (favouriteFilms1 != null) {
                 List<Film> films = new ArrayList<>(favouriteFilms1);
+                if (films.size() == 0)
+                    textView.setVisibility(View.VISIBLE);
+                else
+                    textView.setVisibility(View.INVISIBLE);
                 adapter.setFilms(films);
             }
         });

@@ -1,13 +1,7 @@
 package com.example.mymovies.utils;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.loader.content.AsyncTaskLoader;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,16 +35,6 @@ public class NetworkUtils {
     public static final int VOTE = 1;
 
 
-    private OnStartLoadingListener onStartLoadingListener;
-
-    public void setOnStartLoadingListener(OnStartLoadingListener onStartLoadingListener) {
-        this.onStartLoadingListener = onStartLoadingListener;
-    }
-
-    public interface OnStartLoadingListener{
-        void onStartLoading();
-    }
-
     public static URL buildURLtoReviews(int id){
         Uri uri = Uri.parse(String.format(BASE_URL_REVIEWS, id)).buildUpon()
                 .appendQueryParameter(PARAMS_API_KEY, API_KEY).build();
@@ -63,15 +47,9 @@ public class NetworkUtils {
         return null;
     }
 
-    public static JSONObject getJSONForReviews(int id) {
+    public static void getJSONForReviews(int id, OnDownloadCompleted onDownloadCompleted) {
         URL url = buildURLtoReviews(id);
-        JSONObject result = null;
-        try {
-            result = new JSONLoadTask().execute(url).get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-        return result;
+        new JSONLoadTask(onDownloadCompleted).execute(url);
     }
 
     public static URL buildURLtoVideos(int id){
@@ -86,15 +64,9 @@ public class NetworkUtils {
         return null;
     }
 
-    public static JSONObject getJSONForVideos(int id) {
+    public static void getJSONForVideos(int id, OnDownloadCompleted onDownloadCompleted) {
         URL url = buildURLtoVideos(id);
-        JSONObject result = null;
-        try {
-            result = new JSONLoadTask().execute(url).get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-        return result;
+        new JSONLoadTask(onDownloadCompleted).execute(url);
     }
 
     /**
@@ -104,15 +76,9 @@ public class NetworkUtils {
      * @param page   Номер страницы
      * @return JSON объект с данными
      */
-    public static JSONObject getJSONFromNetwork(int sortBy, int page) {
-        JSONObject result = null;
+    public static void getJSONFromNetwork(int sortBy, int page, OnDownloadCompleted callBack) {
         URL url = buildURL(sortBy, page);
-        try {
-            result = new JSONLoadTask().execute(url).get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-        return result;
+        new JSONLoadTask(callBack).execute(url);
     }
 
     /**
@@ -134,7 +100,7 @@ public class NetworkUtils {
                 .appendQueryParameter(PARAMS_LANGUAGE, LANGUAGE_VALUE)
                 .appendQueryParameter(PARAMS_SORT_BY, methodOfSort)
                 .appendQueryParameter(PARAMS_PAGE, Integer.toString(page))
-                .appendQueryParameter(PARAMS_MIN_VOTE_COUNT, MIN_VOTE_COUNT) .build();
+                .appendQueryParameter(PARAMS_MIN_VOTE_COUNT, MIN_VOTE_COUNT).build();
         try {
             result = new URL(uri.toString());
         } catch (MalformedURLException e) {
@@ -144,6 +110,12 @@ public class NetworkUtils {
     }
 
     private static class JSONLoadTask extends AsyncTask<URL, Void, JSONObject> {
+
+        private OnDownloadCompleted onTaskCompleted;
+
+        public JSONLoadTask(OnDownloadCompleted onTaskCompleted) {
+            this.onTaskCompleted = onTaskCompleted;
+        }
         /**
          * Переопределенный асинхронный метод загрузки данный в формате JSON по ссылке
          *
@@ -173,6 +145,11 @@ public class NetworkUtils {
                     httpURLConnection.disconnect();
             }
             return result;
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject jsonObject) {
+            onTaskCompleted.onTaskCompleted(jsonObject);
         }
     }
 }

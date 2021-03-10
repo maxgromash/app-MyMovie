@@ -11,6 +11,7 @@ import java.util.List;
 @Dao
 public interface FilmDao {
 
+    //General films
     @Query("SELECT * FROM films")
     LiveData<List<Film>> getAllFilms();
 
@@ -26,6 +27,7 @@ public interface FilmDao {
     @Delete
     void deleteFilm(Film film);
 
+    //Favourite films
     @Query("SELECT * FROM favouriteFilms")
     LiveData<List<FavouriteFilms>> getAllFavouriteFilms();
 

@@ -58,9 +58,6 @@ public class JSONUtils {
                 JSONObject review = jsonArray.getJSONObject(i);
                 reviews.add(new Review(review.getString(KEY_REVIEW_AUTHOR),
                         review.getString(KEY_REVIEW_CONTENT)));
-
-
-
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -76,7 +73,6 @@ public class JSONUtils {
      * @return массив фильмов
      */
     public static ArrayList<Film> getMoviesFromJSON(JSONObject jsonObject) {
-
         ArrayList<Film> films = new ArrayList<>();
         try {
             JSONArray jsonArray = jsonObject.getJSONArray(KEY_RESULTS);

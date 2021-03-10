@@ -1,10 +1,8 @@
-package com.example.mymovies;
+package com.example.mymovies.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -12,28 +10,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.example.mymovies.R;
 import com.example.mymovies.adapters.FilmAdapter;
 import com.example.mymovies.data.Film;
 import com.example.mymovies.data.MainViewModel;
-import com.example.mymovies.utils.JSONUtils;
 import com.example.mymovies.utils.NetworkUtils;
 
-import org.json.JSONObject;
-
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,8 +45,7 @@ public class MainActivity extends AppCompatActivity {
     //Создание меню
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_menu, menu);
+        getMenuInflater().inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -73,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
+
         textViewPopularity = findViewById(R.id.textViewPopularity);
         textViewVotes = findViewById(R.id.textViewTopRated);
         switchSort = findViewById(R.id.switchSort);
@@ -85,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerViewFilms = findViewById(R.id.recyclerViewFilms);
         recyclerViewFilms.setLayoutManager(new GridLayoutManager(this, 2));
         recyclerViewFilms.setAdapter(adapter);
-
 
         //Инициализация ViewModel
         viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
@@ -123,14 +111,12 @@ public class MainActivity extends AppCompatActivity {
         //Настройка слушателя конца фильмов
         adapter.setOnReachEndListener(() -> {
             if (!isLoading) {
+
                 downloadData(methodOfSort);
-                recyclerViewFilms.post(() -> adapter.notifyDataSetChanged());
+                //recyclerViewFilms.post(() -> adapter.notifyDataSetChanged());
             }
         });
-
-
     }
-
 
     /**
      * Обработка смены сортировки на рейтинг
@@ -160,10 +146,11 @@ public class MainActivity extends AppCompatActivity {
     private void downloadData(int methodOfSort) {
         isLoading = true;
         progressBar.setVisibility(View.VISIBLE);
-        viewModel.downloadData(methodOfSort, page);
+        viewModel.downloadData(methodOfSort, page, (obj) -> {
+            isLoading = false;
+            progressBar.setVisibility(View.INVISIBLE);
+        });
         page++;
-        isLoading = false;
-        progressBar.setVisibility(View.INVISIBLE);
     }
 
     /**

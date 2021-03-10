@@ -2,7 +2,6 @@ package com.example.mymovies.data;
 
 import android.app.Application;
 import android.os.AsyncTask;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -10,12 +9,16 @@ import androidx.lifecycle.LiveData;
 
 import com.example.mymovies.utils.JSONUtils;
 import com.example.mymovies.utils.NetworkUtils;
+import com.example.mymovies.utils.OnDownloadCompleted;
+import com.example.mymovies.utils.OnLoadingCompleted;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class MainViewModel extends AndroidViewModel {
+public class MainViewModel extends AndroidViewModel  {
 
     private static FilmDatabase database;
     private LiveData<List<Film>> films;
@@ -28,18 +31,28 @@ public class MainViewModel extends AndroidViewModel {
         favouriteFilms = database.filmDao().getAllFavouriteFilms();
     }
 
+    public void downloadReviews(int id, OnLoadingCompleted callback){
+        NetworkUtils.getJSONForReviews(id, jsonObject ->
+                callback.onTaskCompleted(JSONUtils.getReviewsFromJSON(jsonObject)));
+    }
 
-    public void downloadData(int methodOfSort, int page) {
+    public void downloadTrailers(int id, OnLoadingCompleted callback){
+        NetworkUtils.getJSONForVideos(id, jsonObject ->
+                callback.onTaskCompleted(JSONUtils.getTrailerFromJSON(jsonObject)));
+    }
 
-        ArrayList<Film> films = JSONUtils.getMoviesFromJSON(NetworkUtils.getJSONFromNetwork(methodOfSort, page));
-        if (films != null && !films.isEmpty()) {
-            if (page == 1)
-                deleteAllFilms();
-            for (Film film : films) {
-                insertFilm(film);
+    public void downloadData(int methodOfSort, int page, OnLoadingCompleted callback) {
+        NetworkUtils.getJSONFromNetwork(methodOfSort, page, jsonObject -> {
+            ArrayList<Film> films = JSONUtils.getMoviesFromJSON(jsonObject);
+            if (films != null && !films.isEmpty()) {
+                if (page == 1)
+                    deleteAllFilms();
+                for (Film film : films) {
+                    insertFilm(film);
+                }
             }
-        }
-
+            callback.onTaskCompleted(null);
+        });
     }
 
     public LiveData<List<Film>> getFilms() {
@@ -49,7 +62,6 @@ public class MainViewModel extends AndroidViewModel {
     public LiveData<List<FavouriteFilms>> getFavouriteFilms() {
         return favouriteFilms;
     }
-
     public Film getFilmById(int id) {
         try {
             return new GetFilmAsyncTask().execute(id).get();
@@ -87,7 +99,6 @@ public class MainViewModel extends AndroidViewModel {
         }
         return null;
     }
-
 
     //Все операции с базой - асинхронные
     private class GetFilmAsyncTask extends AsyncTask<Integer, Void, Film> {

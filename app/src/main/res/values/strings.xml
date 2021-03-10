@@ -8,4 +8,5 @@
     <string name="item_main">Главная</string>
     <string name="item_favourite">Избранное</string>
     <string name="launch_trailer">Запустить трейлер</string>
+    <string name="no_favourite_films">Список избранных фильмов пуст</string>
 </resources>
